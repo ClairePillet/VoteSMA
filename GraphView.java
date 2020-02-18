@@ -7,52 +7,50 @@ package VoteSMA;
 
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.view.mxGraph;
+import java.util.ArrayList;
 import javax.swing.JFrame;
 
 /**
  *
  * @author claire
  */
-public class GraphView  extends JFrame
-{
+public class GraphView extends JFrame {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -2707712944901661771L;
+    /**
+     *
+     */
+    private static final long serialVersionUID = -2707712944901661771L;
 
-	public GraphView(Graphe g)
-	{
-		
-		mxGraph graph = new mxGraph();
-		Object parent = graph.getDefaultParent();
+    public GraphView(Graphe g) {
 
-		graph.getModel().beginUpdate();
-		try
-		{
-                    for( Node n : g.getNodes()){
-                        graph.insertVertex(parent, String.valueOf(n.getId()), String.valueOf(n.getId()),20,20,80,30);
-                    }
-			Object v1 = graph.insertVertex(parent, null, "Hello", 20, 20, 80,
-					30);
-			Object v2 = graph.insertVertex(parent, null, "World!", 240, 150,
-					80, 30);
-			graph.insertEdge(parent, null, "Edge", v1, v2);
-		}
-		finally
-		{
-			graph.getModel().endUpdate();
-		}
+        mxGraph graph = new mxGraph();
+        Object parent = graph.getDefaultParent();
 
-		mxGraphComponent graphComponent = new mxGraphComponent(graph);
-		getContentPane().add(graphComponent);
+        graph.getModel().beginUpdate();
+        ArrayList ar = new ArrayList<Object>();
+        try {
+            for (Node n : g.getNodes()) {
+                if(n.getId()%2==0){
+                    ar.add(graph.insertVertex(parent, String.valueOf(n.getId()), String.valueOf(n.getId()), 20, 20 + n.getId() * 20, 30, 30));
+                }else{
+                    ar.add(graph.insertVertex(parent, String.valueOf(n.getId()), String.valueOf(n.getId()), 180, 20 + n.getId() * 20, 30, 30));
+                }
                 
-                this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setSize(400, 320);
-		this.setVisible(true);
-	}
+            }
+            for (Edge e : g.getEdges()) {
+                graph.insertEdge(parent, null, "", ar.get(e.from), ar.get(e.to));
+            }
 
-	
+        } finally {
+            graph.getModel().endUpdate();
+        }
 
+        mxGraphComponent graphComponent = new mxGraphComponent(graph);
+        getContentPane().add(graphComponent);
+
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setSize(400, 320);
+        this.setVisible(true);
+    }
 
 }
