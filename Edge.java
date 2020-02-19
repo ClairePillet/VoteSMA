@@ -7,7 +7,7 @@ package VoteSMA;
 
 /**
  *
- * @author guifei
+ * @author claire
  */
 public class Edge {
     int from;

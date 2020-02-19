@@ -5,6 +5,7 @@
  */
 package VoteSMA;
 
+import jade.core.AID;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -16,8 +17,9 @@ import java.util.Set;
 public class Node {
 
     private Set<Node> influNode = new HashSet<>();
+    private Set<Node> friendNode = new HashSet<>();
     private int id;
-
+    private AID aid;
 
 
     public Node(int i) {
@@ -31,7 +33,13 @@ public class Node {
     public void addInfluNode(Node nodeA) {
         influNode.add(nodeA);
     }
+    public Set<Node> getfriendNode() {
+        return friendNode;
+    }
 
+    public void addfriendNode(Node nodeA) {
+        friendNode.add(nodeA);
+    }
     public void setAdjnode(Set<Node> adjnode) {
         this.influNode = adjnode;
     }

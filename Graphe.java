@@ -95,7 +95,9 @@ public class Graphe {
                 if (n != n2 && !edgeExist(n, n2)) {       // *2 because edge i,j and j,i but j in fluemce only by i and two edge exist                      
                     if (r <= this.probaEdge) {
                         n2.addInfluNode(n);
+                        n2.addfriendNode(n);
                         n.addInfluNode(n2);
+                        n.addfriendNode(n2);
                         addEdge(new Edge(n.getId(), n2.getId()));
                         addEdge(new Edge(n2.getId(), n.getId()));
                     }
@@ -117,31 +119,33 @@ public class Graphe {
                     if(diff>0){
                         nodeSetTemp.add(n2);
                         totalSum = totalSum + diff;
-                    }
-                    
+                    }                    
                 }
             }
-            while ((n.getInfluNode().size() * 2) <= this.numberEdge - 2  && totalSum>0) {
+            while ((n.getInfluNode().size() * 2) <= (this.numberEdge - 2) ) {
                 totalSum=proba(n, random, totalSum, nodeSetTemp);
-                System.out.println(n.getId()+" : "+nodeSetTemp.size()+ " -" +totalSum);
+                
             }
+            System.out.println(n.getId()+" : "+n.getInfluNode().size());
             nodeSetTemp.clear();
         }
     }
 
     public int proba(Node n, Random random, int totalSum, ArrayList nodeSetTemp) {
-        // on prend un noeud radom en fn du degre sortant n.getInfluNode().size()*2/this>numberEdge            
-
+        // on prend un noeud radom en fn du degre sortant n.getInfluNode().size()*2/this>numberEdge          
         int index = random.nextInt(totalSum+1);
         int sum = 0;
         int i = 0;
         while (sum < index && i < nodeSetTemp.size() - 1) {
-            sum = sum + (this.numberEdge - ((Node) nodeSetTemp.get(i++)).getInfluNode().size() * 2);
+            sum = sum + (this.numberEdge - (((Node) nodeSetTemp.get(i)).getInfluNode().size() * 2));
+            i++;
         }
         Node addN = (Node) nodeSetTemp.get(Math.max(0, i - 1));
-        totalSum=totalSum- (this.numberEdge -addN.getInfluNode().size() * 2);
+        totalSum=totalSum- (this.numberEdge -(addN.getInfluNode().size() * 2));
         addN.addInfluNode(n);
+        addN.addfriendNode(n);
         n.addInfluNode(addN);
+        n.addfriendNode(addN);
         addEdge(new Edge(n.getId(), addN.getId()));
         addEdge(new Edge(addN.getId(), n.getId()));
         nodeSetTemp.remove(Math.max(0, i - 1));

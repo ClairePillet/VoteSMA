@@ -5,13 +5,14 @@
  */
 package VoteSMA;
 
+import java.io.Serializable;
 import java.util.Random;
 
 /**
  *
  * @author claire
  */
-public class Opinion {
+public class Opinion  implements Serializable {
     int numberOfProposition;
     boolean[] tabOpinion;
 
@@ -26,11 +27,29 @@ public class Opinion {
         for(int i = 0; i < len; i++) {
             tabOpinion[i] = random.nextBoolean();
         }
-    
     }
     
     public Opinion(int numberOfProposition, boolean[] tab) {
         this.numberOfProposition=numberOfProposition;
         tabOpinion=tab;
     }
+
+    public boolean[] getTabOpinion() {
+        return tabOpinion;
+    }
+
+    public void setTabOpinion(boolean[] tabOpinion) {
+        this.tabOpinion = tabOpinion;
+    }
+
+    @Override
+    public String toString() {
+        String s="";
+         for(int i = 0; i < numberOfProposition; i++) {
+            s=s+" "+i+" "+String.valueOf(this.tabOpinion[0]);
+        }
+        return s; //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
 }

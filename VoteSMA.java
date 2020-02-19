@@ -13,7 +13,7 @@ import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 /**
  *
- * @author guifei
+ * @author claire
  */
 public class VoteSMA {
 
@@ -21,31 +21,31 @@ public class VoteSMA {
      * @param args the command line arguments
      */
      static int NBVOTER=10;
-     static int NBEDGE=4;
+     static int NUMBEROPINION=1;
+     static int NBEDGE=9;
      public static void main(String[] args) {
-         
-        // TODO code application logic here
+       
         Runtime runtime = Runtime.instance();
         Profile config = new ProfileImpl("localhost", 8888, null);
         config.setParameter("gui", "false");
         AgentContainer mc = runtime.createMainContainer(config);
         AgentController acA;
-        AgentController acB;
-        Graphe g= new Graphe(NBVOTER, NBEDGE, 0.1f,2);
+        Graphe g= new Graphe(NBVOTER, NBEDGE, 1f,2);
         GraphView gv= new GraphView(g);
         try {
-            Object[] param = {};
             int i = 0;
             while (i < NBVOTER) {
-                acA = mc.createNewAgent("A" + i, VoterAgent.class.getName(), param);
+                Object[] params = {i,g,NUMBEROPINION};
+                acA = mc.createNewAgent( String.valueOf(i), VoterAgent.class.getName(), params);
                 acA.start();
                 i++;
             }
-
+            Object[] param = {NUMBEROPINION,NBVOTER };
+            acA = mc.createNewAgent("Legislateur", LegAgent.class.getName(), param);
+                acA.start();
         } catch (StaleProxyException ignored) {
             System.err.println(ignored);
         }
     }
 
-    
 }
