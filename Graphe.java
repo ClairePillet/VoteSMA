@@ -29,7 +29,9 @@ public class Graphe {
         createNode();
         createEdges(type);
     }
-
+    public void see(){
+           GraphView gv= new GraphView(this);
+    }
     public void addNode(Node nodeA) {
         nodes.add(nodeA);
     }

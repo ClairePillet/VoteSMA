@@ -20,7 +20,7 @@ public class VoteSMA {
     /**
      * @param args the command line arguments
      */
-     static int NBVOTER=10;
+     static int NBVOTER=11;
      static int NUMBEROPINION=1;
      static int NBEDGE=9;
      public static void main(String[] args) {
@@ -31,7 +31,7 @@ public class VoteSMA {
         AgentContainer mc = runtime.createMainContainer(config);
         AgentController acA;
         Graphe g= new Graphe(NBVOTER, NBEDGE, 1f,2);
-        GraphView gv= new GraphView(g);
+     
         try {
             int i = 0;
             while (i < NBVOTER) {

@@ -11,6 +11,8 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  *
@@ -21,6 +23,7 @@ public class LegAgent extends Agent {
     HashMap<AID, Opinion> opinionVoter;// opinion des influ
     int nbVoter;
     Opinion o;
+    int evaCount = 0;
 
     public void setup() {
         Object[] args = getArguments();
@@ -38,6 +41,14 @@ public class LegAgent extends Agent {
             getMessage();
         }
 
+        synchronized void sendMsg(String Content, int Performative, AID reciver) {
+            ACLMessage msg = new ACLMessage(Performative);
+            msg.setContent(Content);
+            msg.addReceiver(reciver);
+            myAgent.send(msg);
+            System.out.println(getLocalName() + " send a msg" + reciver + " " + Content);
+        }
+
         synchronized public void getMessage() {
             ACLMessage msgR = receive();
             while (msgR != null) {
@@ -48,18 +59,30 @@ public class LegAgent extends Agent {
                         opinionVoter.put(msgR.getSender(), msgContent.getContent());
                     }
                 }
-                if(opinionVoter.size()==nbVoter){
-                    System.out.println(opinionVoter.size());
+                if (opinionVoter.size() == nbVoter) {
                     evaluation();
                     opinionVoter.clear();
                 }
                 msgR = receive();
             }
         }
-        public void evaluation(){
-              MajorityVote mv= new MajorityVote(opinionVoter, nbVoter, o);
-              o=mv.updateOMajority();
-              System.out.println("Result : "+o);
+
+        public void evaluation() {
+            MajorityVote mv = new MajorityVote(opinionVoter, nbVoter, o);
+            o = mv.updateOMajority();
+            System.out.println(mv);
+            evaCount++;
+            if (evaCount > 10) {
+                Iterator it = opinionVoter.entrySet().iterator();
+                while (it.hasNext()) {
+                    Map.Entry ps = (Map.Entry) it.next();
+                    AID key = (AID) ps.getKey();
+                    sendMsg("END", ACLMessage.PROPAGATE, key);
+
+                }
+
+                doDelete();
+            }
         }
     }
 }

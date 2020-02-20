@@ -126,11 +126,9 @@ public class VoterAgent extends Agent {
         synchronized public void updateOMajority() {
             if (influencer.size() >= (nbInflu / 2)) {
                 MajorityVote mv = new MajorityVote(influencer, nbInflu, o);
-                String sop =String.valueOf(o);
+                String sop = String.valueOf(o);
                 o = mv.updateOMajority();
-                if(!String.valueOf(o).equals(sop)){
-                    System.out.println(sop + " "+o);
-                }
+
             }
         }
 
@@ -140,9 +138,13 @@ public class VoterAgent extends Agent {
                 int performative = msgR.getPerformative();
                 if (performative == ACLMessage.INFORM) {
                     if (msgR.getContent() != null) {
+
                         updateMemory(new OpinionMessage(msgR));
                         updateOMajority();
                     }
+                }
+                if (performative == ACLMessage.PROPAGATE) {
+                    doDelete();
                 }
                 msgR = receive();
             }
