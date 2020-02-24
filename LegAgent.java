@@ -53,7 +53,7 @@ public class LegAgent extends Agent {
             ACLMessage msgR = receive();
             while (msgR != null) {
                 int performative = msgR.getPerformative();
-                if (performative == ACLMessage.INFORM) {
+                if (performative == ACLMessage.PROPAGATE) {
                     if (msgR.getContent() != null) {
                         OpinionMessage msgContent = new OpinionMessage(msgR);
                         opinionVoter.put(msgR.getSender(), msgContent.getContent());
@@ -72,12 +72,12 @@ public class LegAgent extends Agent {
             o = mv.updateOMajority();
             System.out.println(mv);
             evaCount++;
-            if (evaCount > 10) {
+            if (evaCount > 100) {
                 Iterator it = opinionVoter.entrySet().iterator();
                 while (it.hasNext()) {
                     Map.Entry ps = (Map.Entry) it.next();
                     AID key = (AID) ps.getKey();
-                    sendMsg("END", ACLMessage.PROPAGATE, key);
+                    sendMsg("END", ACLMessage.INFORM, key);
 
                 }
 

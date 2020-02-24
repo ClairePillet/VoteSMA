@@ -124,7 +124,7 @@ public class Graphe {
                     }                    
                 }
             }
-            while ((n.getInfluNode().size() * 2) <= (this.numberEdge - 2) ) {
+            while ((n.getInfluNode().size() * 2) <= (this.numberEdge - 2) && totalSum>0 ) {
                 totalSum=proba(n, random, totalSum, nodeSetTemp);
                 
             }

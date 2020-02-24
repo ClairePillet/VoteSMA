@@ -20,9 +20,10 @@ public class VoteSMA {
     /**
      * @param args the command line arguments
      */
-     static int NBVOTER=11;
+     static int NBVOTER=169;
      static int NUMBEROPINION=1;
-     static int NBEDGE=9;
+     static int NBEDGE=18;
+      static int DIFFUSIONTYPE=3;
      public static void main(String[] args) {
        
         Runtime runtime = Runtime.instance();
@@ -35,7 +36,7 @@ public class VoteSMA {
         try {
             int i = 0;
             while (i < NBVOTER) {
-                Object[] params = {i,g,NUMBEROPINION};
+                Object[] params = {i,g,NUMBEROPINION ,DIFFUSIONTYPE };
                 acA = mc.createNewAgent( String.valueOf(i), VoterAgent.class.getName(), params);
                 acA.start();
                 i++;

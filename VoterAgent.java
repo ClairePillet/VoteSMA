@@ -27,17 +27,20 @@ import java.util.logging.Logger;
 public class VoterAgent extends Agent {
 
     int id;
+    int DIFFUSIONTYPE;
     Graphe g;
     ArrayList<Integer> friend;//ceux qu il influ
     HashMap<AID, Opinion> influencer;// opinion des influ
     int nbInflu;
     Opinion o;
+    boolean MyTurn = false;
 
     public void setup() {
         Object[] args = getArguments();
         id = (int) args[0];
         g = (Graphe) args[1];
         o = new Opinion((int) args[2]);
+        DIFFUSIONTYPE = (int) args[3];
         friend = new ArrayList<>();
         Node myNode = g.getNode(id);
         for (Node n : myNode.getfriendNode()) {
@@ -48,14 +51,25 @@ public class VoterAgent extends Agent {
         nbInflu = myNode.getInfluNode().size() + 1;//us
         addBehaviour(new Routine());
         addBehaviour(new Tick(this, 10));
+        if (id == 0) {
+            MyTurn = true;
+        }
     }
 
-    synchronized public void sendMsgWithContent(Opinion Content, int Performative, AID reciver, Agent myAgent) throws IOException {
+    synchronized public void sendMsgWithContent(Opinion Content, int Performative, AID[] reciver, Agent myAgent, String strContent) throws IOException {
         ACLMessage msgSend = new ACLMessage(Performative);
         Date d = new Date();
         msgSend.setConversationId(d.getTime() + getLocalName());
-        msgSend.setContentObject(Content);
-        msgSend.addReceiver(reciver);
+        if (strContent.equalsIgnoreCase("")) {
+            msgSend.setContentObject(Content);
+        } else {
+            msgSend.setContent(strContent);
+        }
+
+        for (int i = 0; i < reciver.length; i++) {
+            msgSend.addReceiver(reciver[i]);
+        }
+
         myAgent.send(msgSend);
 
     }
@@ -68,7 +82,7 @@ public class VoterAgent extends Agent {
 
         protected void onTick() {
             try {
-                sendMsgWithContent(o, ACLMessage.INFORM, new AID("Legislateur", AID.ISLOCALNAME), myAgent);
+                sendMsgWithContent(o, ACLMessage.PROPAGATE, new AID[]{new AID("Legislateur", AID.ISLOCALNAME)}, myAgent, "");
             } catch (IOException ex) {
                 Logger.getLogger(VoterAgent.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -80,7 +94,7 @@ public class VoterAgent extends Agent {
 
         public void onStart() {
             try {
-                sendMsgWithContent(o, ACLMessage.INFORM, new AID("Legislateur", AID.ISLOCALNAME), myAgent);
+                sendMsgWithContent(o, ACLMessage.PROPAGATE, new AID[]{new AID("Legislateur", AID.ISLOCALNAME)}, myAgent, "");
             } catch (IOException ex) {
                 Logger.getLogger(VoterAgent.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -90,7 +104,7 @@ public class VoterAgent extends Agent {
             getMessage();
             try {
                 if (friend.size() > 0) {
-                    diffusion(1);
+                    diffusion(DIFFUSIONTYPE);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(VoterAgent.class.getName()).log(Level.SEVERE, null, ex);
@@ -103,18 +117,56 @@ public class VoterAgent extends Agent {
                 case 1://syncro                         
                     diffSync();
                     break;
-                case 2://Erdös-Renyi homophily
-                    // createEdgesUndirectedBar();
+                case 2:
+                    diffNextId();
                     break;
                 default:
-                // code block
+                    diffNextFriend();
+                    break;
+            }
+        }
+
+        synchronized public void diffNextId() throws IOException {//          
+            if (MyTurn == true) {
+                AID[] tabAid = new AID[friend.size()];
+                for (int i = 0; i < friend.size(); i++) {
+                    tabAid[i] = new AID(String.valueOf(i), AID.ISLOCALNAME);
+                }
+                sendMsgWithContent(o, ACLMessage.PROPAGATE, tabAid, myAgent, "");
+                int r = id + 1;
+                AID rAid = new AID(String.valueOf(r), AID.ISLOCALNAME);
+                try {
+                    sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
+                } catch (Exception e) {
+                    sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{new AID(String.valueOf(0), AID.ISLOCALNAME)}, myAgent, "YourTurn");
+                }
+                MyTurn = false;
+            }
+        }
+
+        synchronized public void diffNextFriend() throws IOException {//          
+            if (MyTurn == true) {
+                AID[] tabAid = new AID[friend.size()];
+                for (int i = 0; i < friend.size(); i++) {
+                    tabAid[i] = new AID(String.valueOf(i), AID.ISLOCALNAME);
+                }
+                sendMsgWithContent(o, ACLMessage.PROPAGATE, tabAid, myAgent, "");
+                Random random = new Random();
+                int r = random.nextInt(friend.size());
+                AID rAid = new AID(String.valueOf(r), AID.ISLOCALNAME);
+                try {
+                    sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
+                } catch (Exception e) {
+                    sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{new AID(String.valueOf(0), AID.ISLOCALNAME)}, myAgent, "YourTurn");
+                }
+                MyTurn = false;
             }
         }
 
         synchronized public void diffSync() throws IOException {//rqndom
             Random random = new Random();
             int r = random.nextInt(friend.size());
-            sendMsgWithContent(o, ACLMessage.INFORM, new AID(String.valueOf(friend.get(r)), AID.ISLOCALNAME), myAgent);
+            sendMsgWithContent(o, ACLMessage.PROPAGATE, new AID[]{new AID(String.valueOf(friend.get(r)), AID.ISLOCALNAME)}, myAgent, "");
         }
 
         synchronized public void updateMemory(OpinionMessage msgR) {
@@ -128,7 +180,6 @@ public class VoterAgent extends Agent {
                 MajorityVote mv = new MajorityVote(influencer, nbInflu, o);
                 String sop = String.valueOf(o);
                 o = mv.updateOMajority();
-
             }
         }
 
@@ -138,13 +189,20 @@ public class VoterAgent extends Agent {
                 int performative = msgR.getPerformative();
                 if (performative == ACLMessage.INFORM) {
                     if (msgR.getContent() != null) {
+                        if (msgR.getContent().contains("YourTurn")) {
+                            MyTurn = true;
 
-                        updateMemory(new OpinionMessage(msgR));
-                        updateOMajority();
+                        }
+                        if (msgR.getContent().contains("END")) {
+                            doDelete();
+                        }
                     }
                 }
                 if (performative == ACLMessage.PROPAGATE) {
-                    doDelete();
+                    if (msgR.getContent() != null) {
+                        updateMemory(new OpinionMessage(msgR));
+                        updateOMajority();
+                    }
                 }
                 msgR = receive();
             }
