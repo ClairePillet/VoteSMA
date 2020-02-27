@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import javax.swing.JFrame;
 
 /**
  *
@@ -24,6 +25,8 @@ public class LegAgent extends Agent {
     int nbVoter;
     Opinion o;
     int evaCount = 0;
+    int lastChangeCount = 0;
+    Opinion oP;
 
     public void setup() {
         Object[] args = getArguments();
@@ -61,6 +64,7 @@ public class LegAgent extends Agent {
                 }
                 if (opinionVoter.size() == nbVoter) {
                     evaluation();
+
                     opinionVoter.clear();
                 }
                 msgR = receive();
@@ -68,21 +72,36 @@ public class LegAgent extends Agent {
         }
 
         public void evaluation() {
+            oP = o;
             MajorityVote mv = new MajorityVote(opinionVoter, nbVoter, o);
             o = mv.updateOMajority();
             System.out.println(mv);
             evaCount++;
-            if (evaCount > 100) {
-                Iterator it = opinionVoter.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry ps = (Map.Entry) it.next();
-                    AID key = (AID) ps.getKey();
-                    sendMsg("END", ACLMessage.INFORM, key);
-
+            if ((oP == o)) {
+                lastChangeCount++;
+                if (lastChangeCount > 4) {
+                    SendStop();
                 }
-
-                doDelete();
+            } else {
+                lastChangeCount = 0;
             }
+
+         
+            if (evaCount > 100) {
+                SendStop();
+            }
+        }
+
+        public void SendStop() {
+            Iterator it = opinionVoter.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry ps = (Map.Entry) it.next();
+                AID key = (AID) ps.getKey();
+                sendMsg("END", ACLMessage.INFORM, key);
+
+            }
+            System.exit(0);
+            doDelete();
         }
     }
 }
