@@ -47,7 +47,7 @@ public class Graphe {
     public void initSumDegree() {
         this.sumDegree = 0;
         for (Node n : nodes) {
-            this.sumDegree = +n.getInfluNode().size() + n.getfriendNode().size();
+            this.sumDegree =  this.sumDegree +n.getInfluNode().size() + n.getfriendNode().size();
         }
     }
 
@@ -188,15 +188,16 @@ public class Graphe {
         Random random = new Random();
         int i = this.numberBase;
         int edge;
-        float pn;
+        double pn;
         float r;
         while (i < this.numberVertex) {
             Node addN = new Node(i);
             addNode(addN);
             edge = this.numberBase;
             for (Node n : this.nodes) {
-                pn = (n.getInfluNode().size() + n.getfriendNode().size()) / this.sumDegree;
-                System.out.println(pn);
+                int deg=n.getInfluNode().size() + n.getfriendNode().size();
+                pn = deg / this.sumDegree;
+                System.out.println(deg+"/" +this.sumDegree+"="+pn);
                 r = random.nextFloat();
                 if (r <= pn) {
                     addN.addInfluNode(n);
@@ -205,10 +206,12 @@ public class Graphe {
                     n.addfriendNode(addN);
                     addEdge(new Edge(n.getId(), addN.getId()));
                     addEdge(new Edge(addN.getId(), n.getId()));
+                    edge--;     
+                    initSumDegree();
+                     
                 }
-                edge--;
-                //sumDegree = +2;
-                initSumDegree();
+                
+        
                 if (edge == 0) {
                     break;
                 }
