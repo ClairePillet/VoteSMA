@@ -24,9 +24,13 @@ public class LegAgent extends Agent {
     HashMap<AID, Opinion> opinionVoter;// opinion des influ
     int nbVoter;
     Opinion o;
+     Opinion oP;
     int evaCount = 0;
     int lastChangeCount = 0;
-    Opinion oP;
+    MajorityVote mvP;
+    boolean term;
+    boolean lastW;
+    int switchMaj = 0;
 
     public void setup() {
         Object[] args = getArguments();
@@ -49,7 +53,6 @@ public class LegAgent extends Agent {
             msg.setContent(Content);
             msg.addReceiver(reciver);
             myAgent.send(msg);
-            System.out.println(getLocalName() + " send a msg" + reciver + " " + Content);
         }
 
         synchronized public void getMessage() {
@@ -64,7 +67,6 @@ public class LegAgent extends Agent {
                 }
                 if (opinionVoter.size() == nbVoter) {
                     evaluation();
-
                     opinionVoter.clear();
                 }
                 msgR = receive();
@@ -72,24 +74,33 @@ public class LegAgent extends Agent {
         }
 
         public void evaluation() {
-            oP = o;
+
             MajorityVote mv = new MajorityVote(opinionVoter, nbVoter, o);
             o = mv.updateOMajority();
-            System.out.println(mv);
             evaCount++;
-            if ((oP == o)) {
-                lastChangeCount++;
-                if (lastChangeCount > 4) {
+            if (mvP != null) {
+                if ((mvP.equals(mv))) {
+                    lastChangeCount++;
+                    System.out.println(evaCount + " ol " + mv);
+                    if (lastChangeCount > 40) {                   
+                        term = true;
+                        SendStop();
+                    }
+                } else {
+                    if(o!=oP){
+                        switchMaj++;
+                    }                   
+                    System.out.println(evaCount + " op " + mv);
+                    lastChangeCount = 0;
+                }
+                if (evaCount > 100) {
+                    term = false;
+                    System.out.println(evaCount + " ol " + mv);
                     SendStop();
                 }
-            } else {
-                lastChangeCount = 0;
             }
-
-         
-            if (evaCount > 100) {
-                SendStop();
-            }
+            oP=o;
+            mvP = mv;
         }
 
         public void SendStop() {

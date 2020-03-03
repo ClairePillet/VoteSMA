@@ -46,11 +46,12 @@ public class VoterAgent extends Agent {
         for (Node n : myNode.getfriendNode()) {
             friend.add(n.getId());
         }
+
         influencer = new HashMap<AID, Opinion>();
         influencer.put(getAID(), o);
         nbInflu = myNode.getInfluNode().size() + 1;//us
         addBehaviour(new Routine());
-        addBehaviour(new Tick(this, 10));
+        addBehaviour(new Tick(this, 500));
         if (id == 0) {
             MyTurn = true;
         }
@@ -87,7 +88,7 @@ public class VoterAgent extends Agent {
                 Logger.getLogger(VoterAgent.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
+        
     }
 
     public class Routine extends CyclicBehaviour {
@@ -191,7 +192,6 @@ public class VoterAgent extends Agent {
                     if (msgR.getContent() != null) {
                         if (msgR.getContent().contains("YourTurn")) {
                             MyTurn = true;
-
                         }
                         if (msgR.getContent().contains("END")) {
                             doDelete();

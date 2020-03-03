@@ -196,8 +196,7 @@ public class Graphe {
             edge = this.numberBase;
             for (Node n : this.nodes) {
                 int deg=n.getInfluNode().size() + n.getfriendNode().size();
-                pn = deg / this.sumDegree;
-                System.out.println(deg+"/" +this.sumDegree+"="+pn);
+                pn = deg / this.nodes.size();
                 r = random.nextFloat();
                 if (r <= pn) {
                     addN.addInfluNode(n);
@@ -207,11 +206,9 @@ public class Graphe {
                     addEdge(new Edge(n.getId(), addN.getId()));
                     addEdge(new Edge(addN.getId(), n.getId()));
                     edge--;     
-                    initSumDegree();
-                     
+                   // initSumDegree();                     
                 }
                 
-        
                 if (edge == 0) {
                     break;
                 }
@@ -220,48 +217,5 @@ public class Graphe {
         }
     }
 
-    private void createEdgesUndirectedBarold() {
-        Random random = new Random();
-        ArrayList nodeSetTemp = new ArrayList<Node>();
-        for (Node n : this.nodes) {
-            int totalSum = 0;
-            int diff = 0;
-            for (Node n2 : this.nodes) {
-                if (n != n2) {
-                    diff = this.numberBase - (n2.getInfluNode().size() * 2);
-                    if (diff > 0) {
-                        nodeSetTemp.add(n2);
-                        totalSum = totalSum + diff;
-                    }
-                }
-            }
-            while ((n.getInfluNode().size() * 2) <= (this.numberBase - 2) && totalSum > 0) {
-                totalSum = proba(n, random, totalSum, nodeSetTemp);
 
-            }
-            System.out.println(n.getId() + " : " + n.getInfluNode().size());
-            nodeSetTemp.clear();
-        }
-    }
-
-    public int proba(Node n, Random random, int totalSum, ArrayList nodeSetTemp) {
-        // on prend un noeud radom en fn du degre sortant n.getInfluNode().size()*2/this>numberBase          
-        int index = random.nextInt(totalSum + 1);
-        int sum = 0;
-        int i = 0;
-        while (sum < index && i < nodeSetTemp.size() - 1) {
-            sum = sum + (this.numberBase - (((Node) nodeSetTemp.get(i)).getInfluNode().size() * 2));
-            i++;
-        }
-        Node addN = (Node) nodeSetTemp.get(Math.max(0, i - 1));
-        totalSum = totalSum - (this.numberBase - (addN.getInfluNode().size() * 2));
-        addN.addInfluNode(n);
-        addN.addfriendNode(n);
-        n.addInfluNode(addN);
-        n.addfriendNode(addN);
-        addEdge(new Edge(n.getId(), addN.getId()));
-        addEdge(new Edge(addN.getId(), n.getId()));
-        nodeSetTemp.remove(Math.max(0, i - 1));
-        return totalSum;
-    }
 }

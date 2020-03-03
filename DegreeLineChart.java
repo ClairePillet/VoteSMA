@@ -25,12 +25,13 @@ public class DegreeLineChart extends Application {
     static String[] args;
     
     @Override public void start(Stage stage) {
-        stage.setTitle("Line Chart Sample");
+        stage.setTitle("Degree Distribution");
         Parameters parameters = this.getParameters();
         //defining the axes
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("degree");
+        xAxis.setLabel("Degree");
+        yAxis.setLabel("Number of nodes");
         //creating the chart
         final LineChart<Number,Number> lineChart = 
                 new LineChart<Number,Number>(xAxis,yAxis);
@@ -38,7 +39,7 @@ public class DegreeLineChart extends Application {
         lineChart.setTitle("Degree Distribution");
         //defining a series
         XYChart.Series series = new XYChart.Series();
-        series.setName("Degree");
+       
         //populating the series with data
         
         List<String> t = parameters.getRaw();
@@ -50,8 +51,8 @@ public class DegreeLineChart extends Application {
         
         Scene scene  = new Scene(lineChart,800,600);
         lineChart.getData().add(series);
-        saveAsPng(scene,"C:\\Users\\guifei\\Documents\\chqrt\\"+new java.util.Date().getTime()+".png");
-       // stage.setScene(scene);
+        saveAsPng(scene,"C:\\Users\\guifei\\Documents\\chart\\"+new java.util.Date().getTime()+".png");
+       // stage.setScene(scense);
         stage.show();
         stage.close();
     }
