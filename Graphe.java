@@ -26,8 +26,8 @@ public class Graphe {
     int numberVertex; // sommet
     int numberBase;// arrete diriger d influence ( mettre les influenceurs dans les noeuds)
     float probaEdge;
-
     int sumDegree;
+    int degreeMoy;
 
     public Graphe(int numberVertex, int numberEdge, float probaEdge, int type) {
         this.numberVertex = numberVertex;
@@ -44,6 +44,12 @@ public class Graphe {
         nodes.add(nodeA);
     }
 
+    public int getDegreeMoy() {
+        this.degreeMoy = this.sumDegree/this.nodes.size();
+        return  this.degreeMoy;
+    }
+
+    
     public void initSumDegree() {
         this.sumDegree = 0;
         for (Node n : nodes) {
