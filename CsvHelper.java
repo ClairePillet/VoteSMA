@@ -52,7 +52,9 @@ public class CsvHelper {
         File file = new File(completeFileName);
         return file;
     }
-
+    public String[] parseLine(String line ){
+        return line.split(separator);
+    }
     public List<String> readFile() {
 
         FileReader fr = null;

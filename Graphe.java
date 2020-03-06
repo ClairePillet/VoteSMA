@@ -160,9 +160,9 @@ public class Graphe {
 
     public void testGraph() {
         String[] tab = madeValue();
-        final DegreeLineChart mainStage = new DegreeLineChart();
+        final Chart mainStage = new Chart();
 
-        Application.launch(DegreeLineChart.class, tab);
+        Application.launch(Chart.class, tab);
 
     }
 

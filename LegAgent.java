@@ -5,10 +5,17 @@
  */
 package VoteSMA;
 
+import jade.content.lang.Codec;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
+import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.JADEAgentManagement.JADEManagementOntology;
+import jade.domain.JADEAgentManagement.ShutdownPlatform;
 import jade.lang.acl.ACLMessage;
+import jade.wrapper.ControllerException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Application;
 import javax.swing.JFrame;
 
 /**
@@ -39,6 +47,7 @@ public class LegAgent extends Agent {
     Graphe g;
     CsvHelper csvGlobale;
     CsvHelper csvDetail;
+    Simulaton simulationControle;
 
     public void setup() {
         Object[] args = getArguments();
@@ -46,9 +55,10 @@ public class LegAgent extends Agent {
         o = new Opinion((int) args[0]);
         g = (Graphe) args[2];
         opinionVoter = new HashMap<AID, Opinion>();
+        simulationControle = (Simulaton) args[3];
         try {
-            csvGlobale = new CsvHelper(",", "Global.csv",false);
-            csvDetail = new CsvHelper(",", "Detailed.csv",true);
+            csvGlobale = new CsvHelper(",", "Global.csv", false);
+            csvDetail = new CsvHelper(",", "Detailed"+simulationControle.i+".csv", true);
         } catch (IOException ex) {
             System.out.println(LegAgent.class.getName() + " " + ex);
         }
@@ -68,12 +78,12 @@ public class LegAgent extends Agent {
             myAgent.send(msg);
         }
 
-        public void csvWritingGlobale() throws IOException {
+        public void csvWritingGlobale(boolean end) throws IOException {
             List<String> readFile = csvGlobale.readFile();
             List<Map<String, String>> lst = new ArrayList<Map<String, String>>();
             Map<String, String> oneData = new HashMap<String, String>();
-           // oneData.put("id", "id");
-            oneData.put("result", String.valueOf(o));
+            // oneData.put("id", "id");
+            oneData.put("end", String.valueOf(end));
             oneData.put("nbSwitch", String.valueOf(switchMaj));
             oneData.put("degMoy", String.valueOf(g.getDegreeMoy()));
             lst.add(oneData);
@@ -137,7 +147,7 @@ public class LegAgent extends Agent {
                     if (lastChangeCount > 4) {
                         term = true;
                         try {
-                            csvWritingGlobale();
+                            csvWritingGlobale(true);
                         } catch (IOException ex) {
                             Logger.getLogger(LegAgent.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -155,7 +165,7 @@ public class LegAgent extends Agent {
                     System.out.println(evaCount + " ol " + mv);
 
                     try {
-                        csvWritingGlobale();
+                        csvWritingGlobale(false);
                     } catch (IOException ex) {
                         Logger.getLogger(LegAgent.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -172,6 +182,7 @@ public class LegAgent extends Agent {
         }
 
         public void SendStop() {
+
             Iterator it = opinionVoter.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry ps = (Map.Entry) it.next();
@@ -179,8 +190,20 @@ public class LegAgent extends Agent {
                 sendMsg("END", ACLMessage.INFORM, key);
 
             }
-            System.exit(0);
-            doDelete();
+            Codec codec = new SLCodec();
+            Ontology jmo = JADEManagementOntology.getInstance();
+            getContentManager().registerLanguage(codec);
+            getContentManager().registerOntology(jmo);
+            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+            msg.addReceiver(getAMS());
+            msg.setLanguage(codec.getName());
+            msg.setOntology(jmo.getName());
+            try {
+                getContentManager().fillContent(msg, new Action(getAID(), new ShutdownPlatform()));
+                send(msg);
+                //simulationControle.kill();
+            } catch (Exception e) {
+            }
         }
     }
 }
