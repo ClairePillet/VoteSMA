@@ -31,6 +31,14 @@ public class MajorityVote {
         o = oToFill;
     }
 
+    public MajorityVote() {
+
+    }
+
+    public void setDetailedListOpinion(ArrayList<HashMap<Object, Integer>> DetailedListOpinion) {
+        this.DetailedListOpinion = DetailedListOpinion;
+    }
+
     public ArrayList<HashMap<Object, Integer>> getDetailedListOpinion() {
         return DetailedListOpinion;
     }
@@ -40,9 +48,7 @@ public class MajorityVote {
         for (int i = 0; i < o.getTabOpinion().length; i++) {
             countTrue = 0;
             countFalse = 0;
-            Iterator it = mapOpinion.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry ps = (Map.Entry) it.next();
+            for (Map.Entry ps : mapOpinion.entrySet()) {
                 Opinion op = (Opinion) ps.getValue();
                 if (op.getTabOpinion()[i]) {
                     countTrue++;
@@ -50,12 +56,12 @@ public class MajorityVote {
                     countFalse++;
                 }
             }
-            DetailedOpinionResult = new HashMap<Object, Integer>();
+            DetailedOpinionResult = new HashMap<>();
             DetailedOpinionResult.put(true, countTrue);
             DetailedOpinionResult.put(false, countFalse);
             DetailedListOpinion.add(DetailedOpinionResult);
 
-            if (countTrue > (nbVoter / 2)) {      
+            if (countTrue > (nbVoter / 2)) {
                 o.getTabOpinion()[i] = true;
             }
             if (countFalse > (nbVoter / 2)) {
@@ -74,32 +80,29 @@ public class MajorityVote {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
+
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final MajorityVote other = (MajorityVote) obj;
+        MajorityVote other = (MajorityVote) obj;
         for (int i = 0; i < DetailedListOpinion.size(); i++) {
             Iterator it = DetailedListOpinion.get(i).entrySet().iterator();
-            Iterator it2 = other.DetailedListOpinion.get(i).entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry ps = (Map.Entry) it.next();
-                String key = String.valueOf(ps.getKey());
-                Integer count = (Integer) ps.getValue();
-                Map.Entry ps2 = (Map.Entry) it2.next();
-                String key2 = String.valueOf(ps.getKey());
-                Integer count2 = (Integer) ps.getValue();
-                if (key != key2 || !Objects.equals(count, count2)) {
-                    return false;
+            HashMap<Object, Integer> hm = other.DetailedListOpinion.get(i);
+            if (hm != null) {
+                while (it.hasNext()) {
+                    Map.Entry ps = (Map.Entry) it.next();
+                    Object key = ps.getKey();
+                    Integer count = (Integer) ps.getValue();
+                    Integer count2 = hm.get(key);
+                 
+                    if (!Objects.equals(count, count2)) {
+                       
+                        return false;
+                    }
                 }
             }
-
         }
+       
         return true;
     }
 
@@ -107,9 +110,7 @@ public class MajorityVote {
     public String toString() {
         String s = "";
         for (int i = 0; i < DetailedListOpinion.size(); i++) {
-            Iterator it = DetailedListOpinion.get(i).entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry ps = (Map.Entry) it.next();
+            for (Map.Entry ps : DetailedListOpinion.get(i).entrySet()) {
                 String key = String.valueOf(ps.getKey());
                 Integer count = (Integer) ps.getValue();
                 s = s + key + " " + count;

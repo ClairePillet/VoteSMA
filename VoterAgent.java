@@ -14,8 +14,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,11 +41,10 @@ public class VoterAgent extends Agent {
         DIFFUSIONTYPE = (int) args[3];
         friend = new ArrayList<>();
         Node myNode = g.getNode(id);
-        for (Node n : myNode.getfriendNode()) {
+        myNode.getfriendNode().forEach((n) -> {
             friend.add(n.getId());
-        }
-
-        influencer = new HashMap<AID, Opinion>();
+        });
+        influencer = new HashMap<>();
         influencer.put(getAID(), o);
         nbInflu = myNode.getInfluNode().size() + 1;//us
         addBehaviour(new Routine());
@@ -66,13 +63,10 @@ public class VoterAgent extends Agent {
         } else {
             msgSend.setContent(strContent);
         }
-
-        for (int i = 0; i < reciver.length; i++) {
-            msgSend.addReceiver(reciver[i]);
+        for (AID reciver1 : reciver) {
+            msgSend.addReceiver(reciver1);
         }
-
         myAgent.send(msgSend);
-
     }
 
     public class Tick extends TickerBehaviour {
@@ -88,7 +82,7 @@ public class VoterAgent extends Agent {
                 Logger.getLogger(VoterAgent.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
     }
 
     public class Routine extends CyclicBehaviour {
@@ -136,11 +130,9 @@ public class VoterAgent extends Agent {
                 sendMsgWithContent(o, ACLMessage.PROPAGATE, tabAid, myAgent, "");
                 int r = id + 1;
                 AID rAid = new AID(String.valueOf(r), AID.ISLOCALNAME);
-                try {
-                    sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
-                } catch (Exception e) {
-                    sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{new AID(String.valueOf(0), AID.ISLOCALNAME)}, myAgent, "YourTurn");
-                }
+
+                sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
+
                 MyTurn = false;
             }
         }
@@ -155,11 +147,9 @@ public class VoterAgent extends Agent {
                 Random random = new Random();
                 int r = random.nextInt(friend.size());
                 AID rAid = new AID(String.valueOf(r), AID.ISLOCALNAME);
-                try {
-                    sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
-                } catch (Exception e) {
-                    sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{new AID(String.valueOf(0), AID.ISLOCALNAME)}, myAgent, "YourTurn");
-                }
+
+                sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
+
                 MyTurn = false;
             }
         }

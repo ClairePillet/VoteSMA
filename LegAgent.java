@@ -15,18 +15,14 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.JADEAgentManagement.JADEManagementOntology;
 import jade.domain.JADEAgentManagement.ShutdownPlatform;
 import jade.lang.acl.ACLMessage;
-import jade.wrapper.ControllerException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.application.Application;
-import javax.swing.JFrame;
 
 /**
  *
@@ -34,31 +30,33 @@ import javax.swing.JFrame;
  */
 public class LegAgent extends Agent {
 
-    HashMap<AID, Opinion> opinionVoter;// opinion des influ
-    int nbVoter;
+    volatile HashMap<AID, Opinion> opinionVoter;// opinion des influ
+    volatile int nbVoter;
     Opinion o;
     Opinion oP;
-    int evaCount = 0;
-    int lastChangeCount = 0;
+    volatile int evaCount = 0;
+    volatile int lastChangeCount = 0;
     MajorityVote mvP;
-    boolean term;
-    boolean lastW;
-    int switchMaj = 0;
-    Graphe g;
-    CsvHelper csvGlobale;
-    CsvHelper csvDetail;
+    volatile boolean lastW;
+    volatile int switchMaj = 0;
+    volatile Graphe g;
+    volatile CsvHelper csvGlobale;
+    volatile CsvHelper csvDetail;
     Simulaton simulationControle;
 
     public void setup() {
         Object[] args = getArguments();
         nbVoter = (int) args[1];
         o = new Opinion((int) args[0]);
+        oP = new Opinion((int) args[0]);
         g = (Graphe) args[2];
-        opinionVoter = new HashMap<AID, Opinion>();
+        mvP = new MajorityVote();
+        opinionVoter = new HashMap<>();
         simulationControle = (Simulaton) args[3];
         try {
             csvGlobale = new CsvHelper(",", "Global.csv", false);
-            csvDetail = new CsvHelper(",", "Detailed"+simulationControle.i+".csv", true);
+
+            csvDetail = new CsvHelper(",", "Detailed" + simulationControle.i + ".csv", true);
         } catch (IOException ex) {
             System.out.println(LegAgent.class.getName() + " " + ex);
         }
@@ -78,16 +76,17 @@ public class LegAgent extends Agent {
             myAgent.send(msg);
         }
 
-        public void csvWritingGlobale(boolean end) throws IOException {
+        public synchronized void csvWritingGlobale(boolean end) throws IOException {
+            System.out.println(end);
             List<String> readFile = csvGlobale.readFile();
-            List<Map<String, String>> lst = new ArrayList<Map<String, String>>();
-            Map<String, String> oneData = new HashMap<String, String>();
+            List<Map<String, String>> lst = new ArrayList<>();
+            Map<String, String> oneData = new HashMap<>();
             // oneData.put("id", "id");
             oneData.put("end", String.valueOf(end));
             oneData.put("nbSwitch", String.valueOf(switchMaj));
             oneData.put("degMoy", String.valueOf(g.getDegreeMoy()));
             lst.add(oneData);
-            if (readFile.size() == 0) {
+            if (readFile.isEmpty()) {
                 csvGlobale.write(lst, true);
             } else {
                 csvGlobale.write(lst, false);
@@ -95,13 +94,13 @@ public class LegAgent extends Agent {
 
         }
 
-        public void csvWritingDetailed(MajorityVote mv) throws IOException {
+        public synchronized void csvWritingDetailed(MajorityVote mv) throws IOException {
             List<String> readFile = csvDetail.readFile();
-            List<Map<String, String>> lst = new ArrayList<Map<String, String>>();
+            List<Map<String, String>> lst = new ArrayList<>();
 
             for (int i = 0; i < mv.getDetailedListOpinion().size(); i++) {
                 Iterator it = mv.getDetailedListOpinion().get(i).entrySet().iterator();
-                Map<String, String> oneData = new HashMap<String, String>();
+                Map<String, String> oneData = new HashMap<>();
                 while (it.hasNext()) {
                     Map.Entry ps = (Map.Entry) it.next();
                     String key = String.valueOf(ps.getKey());
@@ -110,7 +109,7 @@ public class LegAgent extends Agent {
                 }
                 lst.add(oneData);
             }
-            if (readFile.size() == 0) {
+            if (readFile.isEmpty()) {
                 csvDetail.write(lst, true);
             } else {
                 csvDetail.write(lst, false);
@@ -138,14 +137,12 @@ public class LegAgent extends Agent {
         public void evaluation() {
 
             MajorityVote mv = new MajorityVote(opinionVoter, nbVoter, o);
-            o = mv.updateOMajority();
+            Opinion oHere = mv.updateOMajority();
             evaCount++;
-            if (mvP != null) {
-                if ((mvP.equals(mv))) {
+            if (mvP.getDetailedListOpinion() != null) {
+                if ((mv.equals(mvP))) {
                     lastChangeCount++;
-                    System.out.println(evaCount + " ol " + mv);
-                    if (lastChangeCount > 4) {
-                        term = true;
+                    if (lastChangeCount > 10) {                
                         try {
                             csvWritingGlobale(true);
                         } catch (IOException ex) {
@@ -154,16 +151,14 @@ public class LegAgent extends Agent {
                         SendStop();
                     }
                 } else {
-                    if (o != oP) {
-                        switchMaj++;
-                    }
-                    System.out.println(evaCount + " op " + mv);
                     lastChangeCount = 0;
+                    if (!oHere.equals(oP)) {
+                        switchMaj++;
+                        System.out.println("switCh");
+                    }
                 }
-                if (evaCount > 100) {
-                    term = false;
-                    System.out.println(evaCount + " ol " + mv);
-
+                if (evaCount > 70) {              
+                    System.out.println(evaCount + " " + mv);
                     try {
                         csvWritingGlobale(false);
                     } catch (IOException ex) {
@@ -177,18 +172,15 @@ public class LegAgent extends Agent {
             } catch (IOException ex) {
                 Logger.getLogger(LegAgent.class.getName()).log(Level.SEVERE, null, ex);
             }
-            oP = o;
-            mvP = mv;
+            oP.setTabOpinion(oHere.getTabOpinion().clone());
+            mvP.setDetailedListOpinion(mv.getDetailedListOpinion());
         }
 
-        public void SendStop() {
+        public synchronized void SendStop() {
 
-            Iterator it = opinionVoter.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry ps = (Map.Entry) it.next();
+            for (Map.Entry ps : opinionVoter.entrySet()) {
                 AID key = (AID) ps.getKey();
                 sendMsg("END", ACLMessage.INFORM, key);
-
             }
             Codec codec = new SLCodec();
             Ontology jmo = JADEManagementOntology.getInstance();
@@ -201,9 +193,9 @@ public class LegAgent extends Agent {
             try {
                 getContentManager().fillContent(msg, new Action(getAID(), new ShutdownPlatform()));
                 send(msg);
-                //simulationControle.kill();
             } catch (Exception e) {
             }
+            // simulationControle.kill();
         }
     }
 }

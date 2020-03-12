@@ -36,12 +36,10 @@ public class Edge {
             return false;
         }
         final Edge other = (Edge) obj;
-        if (this.from != other.from) {
+        if (this.from != other.from || this.to != other.to) {
             return false;
         }
-        if (this.to != other.to) {
-            return false;
-        }
+       
         return true;
     }
     

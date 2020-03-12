@@ -32,7 +32,7 @@ public class CsvHelper {
     public CsvHelper(String separator, String f, boolean del) throws IOException {
 
         this.separator = separator;
-        if(del){
+        if (del) {
             file = getResource(f);
             deleteFile();
         }
@@ -52,37 +52,28 @@ public class CsvHelper {
         File file = new File(completeFileName);
         return file;
     }
-    public String[] parseLine(String line ){
+
+    public String[] parseLine(String line) {
         return line.split(separator);
     }
-    public List<String> readFile() {
+
+    public List<String> readFile() throws FileNotFoundException, IOException {
 
         FileReader fr = null;
         List<String> result = new ArrayList<String>();
-        try {
-            fr = new FileReader(file);
-            BufferedReader br = new BufferedReader(fr);
-            for (String line = br.readLine(); line != null; line = br.readLine()) {
-                result.add(line);
-            }
-            br.close();
-            fr.close();
-            return result;
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(CsvHelper.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(CsvHelper.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                fr.close();
-            } catch (IOException ex) {
-                Logger.getLogger(CsvHelper.class.getName()).log(Level.SEVERE, null, ex);
-            }
+
+        fr = new FileReader(file);
+        BufferedReader br = new BufferedReader(fr);
+        for (String line = br.readLine(); line != null; line = br.readLine()) {
+            result.add(line);
         }
+        br.close();
+        fr.close();
         return result;
+
     }
 
-    public void write(List<Map<String, String>> mappedData,boolean writeTitle) throws IOException, IOException, IOException, IOException {
+    public void write(List<Map<String, String>> mappedData, boolean writeTitle) throws IOException {
 
         if (mappedData == null) {
             throw new IllegalArgumentException("List null");
@@ -96,11 +87,13 @@ public class CsvHelper {
         for (String key : oneData.keySet()) {
             titles[i++] = key;
         }
-        write(mappedData, titles,writeTitle);
+        write(mappedData, titles, writeTitle);
     }
-    public boolean deleteFile(){
+
+    public boolean deleteFile() {
         return file.delete();
     }
+
     public void write(List<Map<String, String>> mappedData, String[] titles, boolean writeTitle) throws IOException {
         boolean first = true;
         if (mappedData == null) {
@@ -111,7 +104,7 @@ public class CsvHelper {
             throw new IllegalArgumentException("Title null");
         }
 
-        FileWriter fw = new FileWriter(file,true);
+        FileWriter fw = new FileWriter(file, true);
         BufferedWriter bw = new BufferedWriter(fw);
         if (writeTitle) {
             first = true;
@@ -153,15 +146,15 @@ public class CsvHelper {
 
         boolean needQuote = false;
 
-        if (value.indexOf("\n") != -1) {
+        if (value.contains("\n")) {
             needQuote = true;
         }
 
-        if (value.indexOf(separator) != -1) {
+        if (value.contains(separator)) {
             needQuote = true;
         }
 
-        if (value.indexOf("\"") != -1) {
+        if (value.contains("\"")) {
             needQuote = true;
             value = value.replaceAll("\"", "\"\"");
         }

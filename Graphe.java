@@ -34,6 +34,7 @@ public class Graphe {
         this.numberBase = numberEdge;
         this.probaEdge = probaEdge;
         createGraph(type);
+        this.initSumDegree();
     }
 
     public void see() {
@@ -48,13 +49,12 @@ public class Graphe {
         this.degreeMoy = this.sumDegree/this.nodes.size();
         return  this.degreeMoy;
     }
-
     
     public void initSumDegree() {
         this.sumDegree = 0;
-        for (Node n : nodes) {
+        nodes.forEach((n) -> {
             this.sumDegree =  this.sumDegree +n.getInfluNode().size() + n.getfriendNode().size();
-        }
+        });
     }
 
     public void addEdge(Edge e) {
@@ -89,30 +89,24 @@ public class Graphe {
     }
 
     public void graphFullConnected() {
-        for (Node n : this.nodes) {
+        this.nodes.forEach((n) -> {
             for (Node n2 : this.nodes) {
-
                 if (n != n2 && !edgeExist(n, n2)) {       // *2 because edge i,j and j,i but j in fluemce only by i and two edge exist                      
-
                     n2.addInfluNode(n);
                     n2.addfriendNode(n);
                     n.addInfluNode(n2);
                     n.addfriendNode(n2);
                     addEdge(new Edge(n.getId(), n2.getId()));
                     addEdge(new Edge(n2.getId(), n.getId()));
-
                 }
             }
-        }
-
+        });
     }
 
     public boolean edgeExist(Node n, Node n2) {
         Edge testE = new Edge(n.getId(), n2.getId());
-        for (Edge e : this.edges) {
-            if (e.equals(testE)) {
-                return true;
-            }
+        if (this.edges.stream().anyMatch((e) -> (e.equals(testE)))) {
+            return true;
         }
         return false;
     }
@@ -125,8 +119,7 @@ public class Graphe {
                 break;
             case 2://bar
                 createNode(this.numberBase);
-                graphFullConnected();
-                initSumDegree();
+                graphFullConnected();                
                 createEdgesUndirectedBar();
                 break;
             default:
@@ -135,35 +128,24 @@ public class Graphe {
     }
 
     public String[] madeValue() {
-        HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+        HashMap<Integer, Integer> map = new HashMap<>();
 
-        for (Node n : this.nodes) {
-            int degree = n.getInfluNode().size() + n.getfriendNode().size();
+        this.nodes.stream().map((n) -> n.getInfluNode().size() + n.getfriendNode().size()).forEachOrdered((degree) -> {
             if (map.containsKey(degree)) {
                 map.put(degree, map.get(degree) + 1);
             } else {
                 map.put(degree, 1);
             }
-        }
+        });
         int i = 0;
         String[] tab = new String[map.size() * 2];
-        Iterator it = map.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry ps = (Map.Entry) it.next();
+        for (Map.Entry ps : map.entrySet()) {
             tab[i] = String.valueOf(ps.getKey());
             i++;
             tab[i] = String.valueOf(ps.getValue());
             i++;
         }
         return tab;
-    }
-
-    public void testGraph() {
-        String[] tab = madeValue();
-        final Chart mainStage = new Chart();
-
-        Application.launch(Chart.class, tab);
-
     }
 
     public void importGraphUndirective() {
@@ -173,10 +155,11 @@ public class Graphe {
 
     private void createEdgesUndirectedErdos() {
         Random random = new Random();
-        for (Node n : this.nodes) {
-            for (Node n2 : this.nodes) {
+        this.nodes.forEach((n) -> {
+            this.nodes.forEach((n2) -> {
+                // *2 because edge i,j and j,i but j in fluemce only by i and two edge exist
                 float r = random.nextFloat();
-                if (n != n2 && !edgeExist(n, n2)) {       // *2 because edge i,j and j,i but j in fluemce only by i and two edge exist                      
+                if (n != n2 && !edgeExist(n, n2)) {
                     if (r <= this.probaEdge) {
                         n2.addInfluNode(n);
                         n2.addfriendNode(n);
@@ -186,8 +169,8 @@ public class Graphe {
                         addEdge(new Edge(n2.getId(), n.getId()));
                     }
                 }
-            }
-        }
+            });
+        });
     }
 
     private void createEdgesUndirectedBar() {
@@ -211,8 +194,7 @@ public class Graphe {
                     n.addfriendNode(addN);
                     addEdge(new Edge(n.getId(), addN.getId()));
                     addEdge(new Edge(addN.getId(), n.getId()));
-                    edge--;     
-                   // initSumDegree();                     
+                    edge--;                         
                 }
                 
                 if (edge == 0) {

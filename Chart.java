@@ -38,10 +38,7 @@ public class Chart extends Application {
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("turn");
         yAxis.setLabel("number of voter");
-        //creating the chart
-
-        //defining a series
-        //populating the series with data
+       
         List<String> t = parameters.getRaw();
         int countFile = 0;
 
@@ -87,24 +84,17 @@ public class Chart extends Application {
             stage.close();
             countFile++;
         }
-
     }
 
     public void chartTerminaisonSwitch(Stage stage) throws IOException {
         stage.setTitle("Line Chart Sample");
         Parameters parameters = this.getParameters();
-        //defining the axes
         final CategoryAxis xAxis = new CategoryAxis();
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("number of end");
         yAxis.setLabel("average degree");
-        //creating the chart
         final BarChart<String, Number> barChart = new BarChart<String, Number>(xAxis, yAxis);
-
         barChart.setTitle("Terminaison ");
-        //defining a series
-
-        //populating the series with data
         List<String> t = parameters.getRaw();
         CsvHelper csv = new CsvHelper(",", t.get(0), false);
         List<String> readFile = csv.readFile();
@@ -159,7 +149,6 @@ public class Chart extends Application {
 
         stage.setScene(scene);
         saveAsPng(scene, "C:\\Users\\guifei\\Documents\\chart\\Globale" + new java.util.Date().getTime() + ".png");
-        // stage.setScene(scense);
         stage.show();
         stage.close();
     }
@@ -168,19 +157,15 @@ public class Chart extends Application {
 
         stage.setTitle("Degree Distribution");
         Parameters parameters = this.getParameters();
-        //defining the axes
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Degree");
         yAxis.setLabel("Number of nodes");
-        //creating the chart
         final LineChart<Number, Number> lineChart
                 = new LineChart<Number, Number>(xAxis, yAxis);
 
         lineChart.setTitle("Degree Distribution");
-        //defining a series
         XYChart.Series series = new XYChart.Series();
-        //populating the series with data        
         List<String> t = parameters.getRaw();
         for (int i = 2; i < t.size() - 1; i++) {
             System.out.println(parameters.getRaw().get(i));
@@ -191,7 +176,6 @@ public class Chart extends Application {
         Scene scene = new Scene(lineChart, 800, 600);
         lineChart.getData().add(series);
         saveAsPng(scene, "C:\\Users\\guifei\\Documents\\chart\\" + new java.util.Date().getTime() + ".png");
-        // stage.setScene(scense);
         stage.show();
         stage.close();
     }
@@ -202,7 +186,8 @@ public class Chart extends Application {
         try {
             chartTerminaisonSwitch(stage);
             chartVoteEvol(stage);
-            // DeggreeChart(stage);
+             DeggreeChart(stage);
+             System.exit(0);
         } catch (IOException ex) {
             Logger.getLogger(Chart.class.getName()).log(Level.SEVERE, null, ex);
         }
