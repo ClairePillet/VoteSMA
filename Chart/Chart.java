@@ -34,7 +34,7 @@ public class Chart extends Application {
     static String[] args;
     private static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(Chart.class);
     File file;
-
+    String dir;
     public void chartVoteEvol(Stage stage) {
         stage.setTitle("Line Chart Sample");
         Parameters parameters = this.getParameters();
@@ -52,7 +52,7 @@ public class Chart extends Application {
                 final LineChart<Number, Number> lineChart
                         = new LineChart<Number, Number>(xAxis, yAxis);
                 lineChart.setTitle("Opinion Evolution ");
-                CsvHelper csv = new CsvHelper(",", t.get(1) + countFile + ".csv", false);
+                CsvHelper csv = new CsvHelper(",", t.get(1) + countFile + ".csv", false,dir);
                 List<String> readFile = csv.readFile();
                 List<XYChart.Series> lstSeries = new ArrayList<>();
                 boolean firstLine = true;
@@ -84,7 +84,7 @@ public class Chart extends Application {
                 }
 
                 stage.setScene(scene);
-                saveAsPng(scene, file.getAbsolutePath() + File.separator + "chartImage" + File.separator + "detailed" + new java.util.Date().getTime() + ".png");
+                saveAsPng(scene, file.getAbsolutePath() + File.separator + dir + File.separator + "detailed" + new java.util.Date().getTime() + ".png");
                 stage.show();
                 stage.close();
                 countFile++;
@@ -104,7 +104,7 @@ public class Chart extends Application {
         final BarChart<String, Number> barChart = new BarChart<String, Number>(xAxis, yAxis);
         barChart.setTitle("Terminaison ");
         List<String> t = parameters.getRaw();
-        CsvHelper csv = new CsvHelper(",", t.get(0), false);
+        CsvHelper csv = new CsvHelper(",", t.get(0), false,dir);
         List<String> readFile = csv.readFile();
         List<String> lstSeries = new ArrayList<>();
         boolean firstLine = true;
@@ -155,7 +155,7 @@ public class Chart extends Application {
         barChart.getData().add(series2);
 
         stage.setScene(scene);
-        saveAsPng(scene, file.getAbsolutePath() + File.separator + "chartImage" + File.separator + "Global" + new java.util.Date().getTime() + ".png");
+        saveAsPng(scene, file.getAbsolutePath() + File.separator +dir + File.separator + "Global" + new java.util.Date().getTime() + ".png");
         stage.show();
         stage.close();
     }
@@ -191,7 +191,13 @@ public class Chart extends Application {
     public void start(Stage stage) {
 
         try {
-            file = new File("");
+            file= new File("");
+              dir=String.valueOf(Main.DIFFUSIONTYPE);
+            if(Main.GRAPHETYPE==1){
+              dir=  dir.concat(String.valueOf(Main.PROBAEDGE));
+            }else{
+               dir= dir.concat(String.valueOf(Main.NBBASENODE));
+            }
             chartTerminaisonSwitch(stage);
             chartVoteEvol(stage);
             //  DeggreeChart(stage);

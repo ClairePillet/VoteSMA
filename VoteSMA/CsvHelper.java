@@ -29,26 +29,33 @@ public class CsvHelper {
     String separator;
     File file;
 
-    public CsvHelper(String separator, String f, boolean del) throws IOException {
+    public CsvHelper(String separator, String f, boolean del, String dir) throws IOException {
 
         this.separator = separator;
+        
         if (del) {
-            file = getResource(f);
+            file = getResource(f,dir);
             deleteFile();
         }
-        file = getResource(f);
+        file = getResource(f,dir);
         file.createNewFile();
 
     }
 
-    public String getResourcePath(String fileName) {
+    public String getResourcePath(String fileName,String dir) throws IOException {
         final File f = new File("");
-        final String dossierPath = f.getAbsolutePath() + File.separator + fileName;
+        
+        File directory=new File(f.getAbsolutePath()+File.separator+ dir);
+        if(!directory.exists()){
+            directory.mkdir();
+        }
+                
+        final String dossierPath = f.getAbsolutePath()+File.separator+ dir + File.separator + fileName;
         return dossierPath;
     }
 
-    public File getResource(String fileName) {
-        final String completeFileName = getResourcePath(fileName);
+    public File getResource(String fileName,String dir) throws IOException {
+        final String completeFileName = getResourcePath(fileName,dir);
         File file = new File(completeFileName);
         return file;
     }

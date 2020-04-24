@@ -60,7 +60,7 @@ public class Simulaton implements Runnable {
         config.setParameter("gui", "false");
         //  config.setParameter("jade_core_messaging_MessageManager_poolsize", "100000");
         // config.setParameter("jade_core_messaging_MessageManager_maxqueuesize", "10000000000");
-
+        logger.error("new sim");
         mc = runtime.createMainContainer(config);
         AgentController acA;
          g = new Graphe(NBVOTER, NBBASENODE, PROBAEDGE, GRAPHETYPE);
@@ -76,7 +76,7 @@ public class Simulaton implements Runnable {
             acA.start();
             nb--;
         }
-        runtime.invokeOnTermination(this);
+        //  runtime.invokeOnTermination(this);
 
         // Process p1 =Process.clas
         //    p1.waitFor()

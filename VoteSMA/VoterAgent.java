@@ -10,8 +10,12 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.AMSService;
+import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,6 +35,7 @@ public class VoterAgent extends Agent {
 
     int id;
     int timeNoSpeak;
+    int nbTalk;
     int DIFFUSIONTYPE;
     Graphe g;
     ArrayList<Integer> friend;//ceux qu il influ
@@ -57,19 +62,20 @@ public class VoterAgent extends Agent {
         influencer.put(getAID(), o);
         nbInflu = myNode.getInfluNode().size() + 1;//us
         timeNoSpeak = 0;
+        nbTalk=0;
         addBehaviour(new Routine());
-        addBehaviour(new Tick(this, 500));
+        addBehaviour(new Tick(this, 100));
         if (id == 0) {
             MyTurn = true;
         }
     }
 
-    synchronized public void sendMsgWithContent(Object Content, int Performative, AID[] reciver, Agent myAgent, String strContent) throws IOException {
+    synchronized public void sendMsgWithContent(Object[] Content, int Performative, AID[] reciver, Agent myAgent, String strContent) throws IOException {
         ACLMessage msgSend = new ACLMessage(Performative);
         Date d = new Date();
         msgSend.setConversationId(d.getTime() + getLocalName());
         if (strContent.equalsIgnoreCase("")) {
-            msgSend.setContentObject((Opinion) Content);
+            msgSend.setContentObject( Content);
         } else {
             msgSend.setContent(strContent);
         }
@@ -87,9 +93,10 @@ public class VoterAgent extends Agent {
 
         protected void onTick() {
             try {           
-                sendMsgWithContent(o, ACLMessage.PROPAGATE, new AID[]{new AID("Legislateur", AID.ISLOCALNAME)}, myAgent, "");
+                Object[] tab={nbTalk,o};
+                sendMsgWithContent(tab, ACLMessage.PROPAGATE, new AID[]{new AID("Legislateur", AID.ISLOCALNAME)}, myAgent, "");
             } catch (IOException ex) {
-                logger.error(ex);
+                logger.error(ex.toString());
             }
         }
 
@@ -98,10 +105,11 @@ public class VoterAgent extends Agent {
     public class Routine extends CyclicBehaviour {
 
         public void onStart() {
-            try {         
-                sendMsgWithContent(o, ACLMessage.PROPAGATE, new AID[]{new AID("Legislateur", AID.ISLOCALNAME)}, myAgent, "");
+            try {        
+                Object[] tab={nbTalk,o};
+                sendMsgWithContent(tab, ACLMessage.PROPAGATE, new AID[]{new AID("Legislateur", AID.ISLOCALNAME)}, myAgent, "");
             } catch (IOException ex) {
-                 logger.error(ex);
+                logger.error(ex.toString());
             }
         }
 
@@ -112,7 +120,7 @@ public class VoterAgent extends Agent {
                     diffusion(DIFFUSIONTYPE);
                 }
             } catch (IOException ex) {
-                 logger.error(ex);
+                logger.error(ex.toString());
             }
 
         }
@@ -129,38 +137,72 @@ public class VoterAgent extends Agent {
                     //System.out.println("I talk"+id);
                     diffNeedToSpeak();
                     break;
-                default:
+                     case 4:
+                    //System.out.println("I talk"+id);
                     diffNextFriend();
+                    break;
+                     case 5:
+                    //System.out.println("I talk"+id);
+                    diffNextIdloop();
+                    break;
+                default:
+                    
                     break;
             }
         }
 
         synchronized public void diffNextId() throws IOException {//          
             if (MyTurn == true) {
+                nbTalk++;
                 AID[] tabAid = new AID[friend.size()];
                 for (int i = 0; i < friend.size(); i++) {
                     tabAid[i] = new AID(String.valueOf(i), AID.ISLOCALNAME);
                 }
-                sendMsgWithContent(o, ACLMessage.PROPAGATE, tabAid, myAgent, "");
+                Object[] tab={nbTalk,o};
+                sendMsgWithContent(tab, ACLMessage.PROPAGATE, tabAid, myAgent, "");
                 int r = id + 1;
                 AID rAid = new AID(String.valueOf(r), AID.ISLOCALNAME);
-                sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
+                sendMsgWithContent(tab, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
+                MyTurn = false;
+            }
+        }
+        synchronized public void diffNextIdloop() throws IOException {//          
+            if (MyTurn == true) {
+                nbTalk++;
+              
+                AID[] tabAid = new AID[friend.size()];
+                for (int i = 0; i < friend.size(); i++) {
+                    tabAid[i] = new AID(String.valueOf(i), AID.ISLOCALNAME);
+                }
+                Object[] tab={nbTalk,o};
+                sendMsgWithContent(tab, ACLMessage.PROPAGATE, tabAid, myAgent, "");
+                int r = id + 1;
+            
+                if(r>=g.numberVertex){
+         
+                    r=0;
+                }
+                AID rAid = new AID(String.valueOf(r), AID.ISLOCALNAME);
+            
+                sendMsgWithContent(tab, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
                 MyTurn = false;
             }
         }
 
         synchronized public void diffNextFriend() throws IOException {//          
             if (MyTurn == true) {
+                nbTalk++;
                 AID[] tabAid = new AID[friend.size()];
                 for (int i = 0; i < friend.size(); i++) {
                     tabAid[i] = new AID(String.valueOf(i), AID.ISLOCALNAME);
                 }
-                sendMsgWithContent(o, ACLMessage.PROPAGATE, tabAid, myAgent, "");
+                Object[] tab={nbTalk,o};
+                sendMsgWithContent(tab, ACLMessage.PROPAGATE, tabAid, myAgent, "");
                 Random random = new Random();
                 int r = random.nextInt(friend.size());
                 AID rAid = new AID(String.valueOf(r), AID.ISLOCALNAME);
 
-                sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
+                sendMsgWithContent(null, ACLMessage.INFORM, new AID[]{rAid}, myAgent, "YourTurn");
 
                 MyTurn = false;
             }
@@ -168,20 +210,28 @@ public class VoterAgent extends Agent {
 
         synchronized public void diffSync() throws IOException {//rqndom
             Random random = new Random();
-            int r = random.nextInt(friend.size());
-            sendMsgWithContent(o, ACLMessage.PROPAGATE, new AID[]{new AID(String.valueOf(friend.get(r)), AID.ISLOCALNAME)}, myAgent, "");
+          
+               AID[] tabAid = new AID[friend.size()];
+                for (int i = 0; i < friend.size(); i++) {
+                    nbTalk++;
+                    tabAid[i] = new AID(String.valueOf(i), AID.ISLOCALNAME);
+                }
+                Object[] tab={nbTalk,o};
+                sendMsgWithContent(tab, ACLMessage.PROPAGATE, tabAid, myAgent, "");
         }
 
         synchronized public void diffNeedToSpeak() throws IOException {//rqndom
             try {
                 if (MyTurn == true) {
+                    nbTalk++;
                     timeNoSpeak=0;
+                    Object[] tab={nbTalk,o};
                     AID[] tabAid = new AID[friend.size()];
                     for (int i = 0; i < friend.size(); i++) {
                         tabAid[i] = new AID(String.valueOf(i), AID.ISLOCALNAME);
                     }
-                    sendMsgWithContent(o, ACLMessage.PROPAGATE, tabAid, myAgent, "");
-
+                    sendMsgWithContent(tab, ACLMessage.PROPAGATE, tabAid, myAgent, "");
+                    
                     
                     tabAid = new AID[g.numberVertex];
                   
@@ -189,12 +239,13 @@ public class VoterAgent extends Agent {
                          tabAid[i] = new AID(String.valueOf(i), AID.ISLOCALNAME);
                          
                     }
-                    sendMsgWithContent(o, ACLMessage.REQUEST, tabAid, myAgent, "WhoTime?");
+                    
+                    sendMsgWithContent(tab, ACLMessage.REQUEST, tabAid, myAgent, "WhoTime?");
 
                     MyTurn = false;
                 }
             } catch (Exception e) {
-                 logger.error(e);
+                 logger.error(e.toString());
             }
         }
 
@@ -239,10 +290,11 @@ public class VoterAgent extends Agent {
                     if (msgR.getContent() != null) {                         
                         if (msgR.getContent().contains("WhoTime?")) {
                             try {
-                                //send Message with time                                
-                                sendMsgWithContent(timeNoSpeak, ACLMessage.PROPOSE, new AID[]{msgR.getSender()}, myAgent, String.valueOf(timeNoSpeak));
+                                //send Message with time   
+                                Object[] tab={0,timeNoSpeak};
+                                sendMsgWithContent(tab, ACLMessage.PROPOSE, new AID[]{msgR.getSender()}, myAgent, String.valueOf(timeNoSpeak));
                             } catch (IOException ex) {
-                                 logger.error(ex);
+                                 logger.error(ex.toString());
                             } 
                         }
                     }
@@ -277,9 +329,10 @@ public class VoterAgent extends Agent {
             }
           
             try {
-                sendMsgWithContent(o, ACLMessage.INFORM, new AID[]{maxAid}, myAgent, "YourTurn");
+                Object[] tab={nbTalk,o};
+                sendMsgWithContent(tab, ACLMessage.INFORM, new AID[]{maxAid}, myAgent, "YourTurn");
             } catch (IOException ex) {
-                logger.error(ex);
+                logger.error(ex.toString());
             }
         }
     }

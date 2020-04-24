@@ -33,22 +33,32 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    static int NBVOTER;
-    static int NUMBEROPINION;
-    static int NBBASENODE;
+   
+    private static final Logger logger = LogManager.getLogger(Main.class);
+static int NBBASENODE;
     static int DIFFUSIONTYPE;
     static float PROBAEDGE;
     static int GRAPHETYPE;
-    static AgentContainer mc;
-    static jade.core.Runtime runtime;
-    static Profile config;
-    static int i = 0;
-    private static final Logger logger = LogManager.getLogger(Main.class);
-
     public static void main(String[] args) throws ControllerException {
 
         try {
-       
+         final Properties prop = new Properties();
+        InputStream input = null;
+    
+        try {
+
+            input = new FileInputStream("config.properties");
+
+            // load a properties file
+            prop.load(input);
+
+          
+            NBBASENODE = Integer.parseInt(prop.getProperty("NBBASENODE"));
+            DIFFUSIONTYPE = Integer.parseInt(prop.getProperty("DIFFUSIONTYPE"));
+            GRAPHETYPE = Integer.parseInt(prop.getProperty("GRAPHETYPE"));
+        
+            PROBAEDGE = Float.parseFloat(prop.getProperty("PROBAEDGE"));
+  
             String[] parametter = new String[3];
             parametter[0] = "Global.csv";
             parametter[1] = "Detailed";
@@ -56,6 +66,19 @@ public class Main {
 
             //  parametter[3] =g.madeValue();
             Application.launch(Chart.class, parametter);
+            Simulaton s = new Simulaton();
+        } catch (final IOException ex) {
+            logger.error(ex);
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (final IOException e) {
+                     logger.error(e);
+                }
+            }
+        }
+            
         } catch (final Exception ex) {
             logger.error(ex);
         }

@@ -35,18 +35,21 @@ import org.apache.logging.log4j.core.config.xml.XmlConfiguration;
  */
 public class LegAgent extends Agent {
 
-    volatile HashMap<AID, Opinion> opinionVoter;// opinion des influ
-    volatile int nbVoter;
+     HashMap<AID, Opinion> opinionVoter;// opinion des influ
+     int nbVoter;
+     int nbTalkTot;
+     int nbTalkTotLastChange;
     Opinion o;
     Opinion oP;
-    volatile int evaCount = 0;
-    volatile int lastChangeCount = 0;
+     int evaCount = 0;
+     int lastChangeCount = 0;
     MajorityVote mvP;
-    volatile boolean lastW;
-    volatile int switchMaj = 0;
-    volatile Graphe g;
-    volatile CsvHelper csvGlobale;
-    volatile CsvHelper csvDetail;
+     boolean lastW;
+     int switchMaj = 0;
+     Graphe g;
+     CsvHelper csvGlobale;
+    CsvHelper csvDetail;
+     boolean close =false;
     Simulaton simulationControle;
   private static final org.apache.logging.log4j.Logger logger = LogManager.getLogger("log1");
     public void setup() {
@@ -58,11 +61,18 @@ public class LegAgent extends Agent {
         oP = new Opinion((int) args[0]);
         g = (Graphe) args[2];
         mvP = new MajorityVote();
+        nbTalkTot=0;
         opinionVoter = new HashMap<>();
         simulationControle = (Simulaton) args[3];
         try {
-            csvGlobale = new CsvHelper(",", "Global.csv", false);
-            csvDetail = new CsvHelper(",", "Detailed" + VoteSMA.i + ".csv", true);
+            String dir=String.valueOf(VoteSMA.DIFFUSIONTYPE);
+            if(VoteSMA.GRAPHETYPE==1){
+               dir= dir.concat(String.valueOf(VoteSMA.PROBAEDGE));
+            }else{
+               dir= dir.concat(String.valueOf(VoteSMA.NBBASENODE));
+            }
+            csvGlobale = new CsvHelper(",", "Global.csv", false, dir);
+            csvDetail = new CsvHelper(",", "Detailed" + VoteSMA.i + ".csv", true, dir);
                   System.out.println(VoteSMA.i);
         } catch (IOException ex) {
               logger.error(ex);
@@ -92,6 +102,10 @@ public class LegAgent extends Agent {
             oneData.put("end", String.valueOf(end));
             oneData.put("nbSwitch", String.valueOf(switchMaj));
             oneData.put("degMoy", String.valueOf(g.getDegreeMoy()));
+             oneData.put("nbInflu", String.valueOf(nbTalkTotLastChange));
+             oneData.put("nbElec", String.valueOf(evaCount));
+             oneData.put("Concensus", String.valueOf(mvP.isConcensus()));
+           
             lst.add(oneData);
             if (readFile.isEmpty()) {
                 csvGlobale.write(lst, true);
@@ -128,15 +142,20 @@ public class LegAgent extends Agent {
             while (msgR != null) {
                 int performative = msgR.getPerformative();
                 if (performative == ACLMessage.PROPAGATE) {
-                    if (msgR.getContent() != null) {
+                    if (msgR.getContent() != null && opinionVoter.size() < nbVoter) {
                         OpinionMessage msgContent = new OpinionMessage(msgR);
-                        opinionVoter.put(msgR.getSender(), msgContent.getContent());
+                        if(!opinionVoter.containsKey(msgR.getSender())){
+                            opinionVoter.put(msgR.getSender(), msgContent.getContent());
+                        nbTalkTot=nbTalkTot+msgContent.getNbTalk();
+                        }
+                        
                     }
                 }
                 if (opinionVoter.size() == nbVoter) {
                      System.out.println("evql");
                     evaluation();
                     opinionVoter.clear();
+                    nbTalkTot=0;
                 }
                 msgR = receive();
             }
@@ -147,12 +166,13 @@ public class LegAgent extends Agent {
             MajorityVote mv = new MajorityVote(opinionVoter, nbVoter, o);
             Opinion oHere = mv.updateOMajority();
             evaCount++;
-            if (mvP.getDetailedListOpinion() != null) {
+            if (mvP.getDetailedListOpinion() != null && close!=true) {
                       System.out.println(mv);
                 if ((mv.equals(mvP))) {
                     lastChangeCount++;
                     if (lastChangeCount > 20) {                
                         try {
+                            close=true;
                             csvWritingGlobale(true);
                         } catch (IOException ex) {
                             logger.error(ex);
@@ -161,14 +181,16 @@ public class LegAgent extends Agent {
                     }
                 } else {
                     lastChangeCount = 0;
+                    nbTalkTotLastChange=nbTalkTot;
                     if (!oHere.equals(oP)) {
                         switchMaj++;
                         System.out.println("switCh");
                     }
                 }
-                if (evaCount > 100) {              
+                if (evaCount == 100) {              
                     System.out.println(evaCount + " " + mv);
                     try {
+                        close=true;
                         csvWritingGlobale(false);
                     } catch (IOException ex) {
                         logger.error(ex);
@@ -183,6 +205,8 @@ public class LegAgent extends Agent {
             }
             oP.setTabOpinion(oHere.getTabOpinion().clone());
             mvP.setDetailedListOpinion((ArrayList<HashMap<Object, Integer>>)mv.getDetailedListOpinion().clone());
+            mvP.setConcensus(mv.isConcensus());
+                    
         }
 
         public synchronized void SendStop() {

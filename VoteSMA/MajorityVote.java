@@ -21,12 +21,14 @@ public class MajorityVote {
     private HashMap<AID, Opinion> mapOpinion;
     private int nbVoter;
     private Opinion o;
+    private boolean Concensus;
     private HashMap<Object, Integer> DetailedOpinionResult;
     private ArrayList<HashMap<Object, Integer>> DetailedListOpinion;
 
     public MajorityVote(HashMap<AID, Opinion> mapOpinion, int nbVoter, Opinion oToFill) {
         this.mapOpinion = mapOpinion;
         this.nbVoter = nbVoter;
+        this.Concensus=false;
         DetailedListOpinion = new ArrayList<>();
         o = oToFill;
     }
@@ -42,6 +44,15 @@ public class MajorityVote {
     public ArrayList<HashMap<Object, Integer>> getDetailedListOpinion() {
         return DetailedListOpinion;
     }
+
+    public boolean isConcensus() {
+        return this.Concensus;
+    }
+
+    public void setConcensus(boolean Concensus) {
+        this.Concensus = Concensus;
+    }
+    
 
     synchronized public Opinion updateOMajority() {
         int countTrue, countFalse;
@@ -60,7 +71,12 @@ public class MajorityVote {
             DetailedOpinionResult.put(true, countTrue);
             DetailedOpinionResult.put(false, countFalse);
             DetailedListOpinion.add(DetailedOpinionResult);
-
+            if(countTrue==0 || countFalse==0){
+                this.Concensus=true;
+            }else{
+                 this.Concensus=false;
+            }
+                    
             if (countTrue > (nbVoter / 2)) {
                 o.getTabOpinion()[i] = true;
             }
@@ -70,7 +86,7 @@ public class MajorityVote {
         }
         return o;
     }
-
+    
     @Override
     public int hashCode() {
         int hash = 3;

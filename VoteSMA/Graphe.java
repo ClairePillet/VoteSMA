@@ -46,7 +46,8 @@ public class Graphe {
     }
 
     public int getDegreeMoy() {
-        this.degreeMoy = this.sumDegree/this.nodes.size();
+        initSumDegree();
+        this.degreeMoy = (this.sumDegree/2)/this.nodes.size();
         return  this.degreeMoy;
     }
     
